@@ -1,6 +1,6 @@
-import { NavLink } from "react-router-dom";
+﻿import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard, Users, FolderKanban, Receipt, CheckSquare,
+  LayoutDashboard, Users, UserCog, FolderKanban, Receipt, CheckSquare,
   TrendingUp, Bell, Plug, Settings, ScrollText,
 } from "lucide-react";
 import { clsx } from "clsx";
@@ -15,6 +15,7 @@ const navItems = [
   { to: "/pipeline", label: "Pipeline", icon: TrendingUp },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/integrations", label: "Integrations", icon: Plug },
+  { to: "/team", label: "Team", icon: UserCog, adminOnly: true },
   { to: "/audit-log", label: "Audit Log", icon: ScrollText, adminOnly: true },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
@@ -57,3 +58,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

@@ -35,3 +35,28 @@ class TestAuthFlow:
         assert resp.status_code == 200
         decoded = jwt.decode(resp.data["access"], options={"verify_signature": False})
         assert decoded["role"] == "admin"
+
+@pytest.mark.django_db
+class TestTeamManagement:
+    def test_admin_can_add_update_and_remove_team_member(self):
+        client = APIClient()
+        reg = client.post("/api/auth/register/", {
+            "organization_name": "Acme Ops", "email": "boss@acme.com",
+            "password": "SuperSecret123", "first_name": "Boss",
+        })
+        client.credentials(HTTP_AUTHORIZATION="Bearer " + reg.data["access"])
+
+        created = client.post("/api/team/", {
+            "email": "dev@acme.com", "first_name": "Dev", "last_name": "One",
+            "role": "employee", "job_title": "Engineer", "password": "SuperSecret123",
+        })
+        assert created.status_code == 201
+        pub_id = created.data["public_id"]
+
+        patched = client.patch("/api/team/" + pub_id + "/", {"role": "manager", "is_active_member": False})
+        assert patched.status_code == 200
+        assert patched.data["role"] == "manager"
+        assert patched.data["is_active_member"] is False
+
+        deleted = client.delete("/api/team/" + pub_id + "/")
+        assert deleted.status_code == 204

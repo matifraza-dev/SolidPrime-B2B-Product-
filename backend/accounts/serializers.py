@@ -128,3 +128,16 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
             "notify_deal_won_lost", "notify_task_assigned",
             "notify_customer_created", "email_weekly_digest",
         ]
+
+class TeamMemberCreateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    role = serializers.ChoiceField(choices=User.Role.choices, default=User.Role.EMPLOYEE)
+    job_title = serializers.CharField(max_length=128, required=False, allow_blank=True)
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("An account with this email already exists.")
+        return value.lower()

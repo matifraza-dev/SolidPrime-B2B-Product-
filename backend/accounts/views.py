@@ -13,6 +13,7 @@ from .serializers import (
     OrganizationSerializer,
     OrganizationUpdateSerializer,
     RegisterSerializer,
+    TeamMemberCreateSerializer,
     TeamMemberSerializer,
     UserSerializer,
 )
@@ -77,12 +78,12 @@ class TeamMemberOptionsView(APIView):
 
 class TeamMemberViewSet(viewsets.ModelViewSet):
     """
-    /api/team/ - Admin-only management of organization members (role changes,
-    deactivation). Regular members are listed read-only elsewhere (e.g. task
-    assignee dropdowns) via a separate lightweight endpoint if needed later.
+    /api/team/ - Admin-only management of organization members (invite/create,
+    role changes, deactivation, removal).
     """
     serializer_class = TeamMemberSerializer
     permission_classes = [IsAdmin]
+    lookup_field = "public_id"
     filterset_fields = ["role", "is_active_member"]
     search_fields = ["email", "first_name", "last_name"]
     ordering_fields = ["date_joined", "email"]
@@ -91,6 +92,22 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
         return User.objects.filter(organization=self.request.user.organization).exclude(
             id=self.request.user.id
         )
+
+    def create(self, request, *args, **kwargs):
+        ser = TeamMemberCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        d = ser.validated_data
+        member = User.objects.create_user(
+            username=d["email"],
+            email=d["email"],
+            password=d["password"],
+            first_name=d["first_name"],
+            last_name=d.get("last_name", ""),
+            role=d["role"],
+            job_title=d.get("job_title", ""),
+            organization=request.user.organization,
+        )
+        return Response(TeamMemberSerializer(member).data, status=status.HTTP_201_CREATED)
 
 
 class ChangePasswordView(APIView):
@@ -144,3 +161,4 @@ class NotificationPreferenceView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+﻿import { createBrowserRouter, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute, RoleRoute } from "./ProtectedRoute";
@@ -9,6 +9,7 @@ const RegisterPage = lazy(() => import("@/features/auth/RegisterPage").then((m) 
 const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const CustomersPage = lazy(() => import("@/features/customers/CustomersPage").then((m) => ({ default: m.CustomersPage })));
 const AuditLogPage = lazy(() => import("@/features/audit-log/AuditLogPage").then((m) => ({ default: m.AuditLogPage })));
+const TeamPage = lazy(() => import("@/features/team/TeamPage").then((m) => ({ default: m.TeamPage })));
 const PipelinePage = lazy(() => import("@/features/pipeline/PipelinePage").then((m) => ({ default: m.PipelinePage })));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const IntegrationsPage = lazy(() => import("@/features/integrations/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })));
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
           {
             element: <RoleRoute allow={["admin"]} />,
             children: [
+              { path: "/team", element: withSuspense(<TeamPage />) },
               { path: "/audit-log", element: withSuspense(<AuditLogPage />) },
             ],
           },
@@ -51,3 +53,4 @@ export const router = createBrowserRouter([
   },
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
+
