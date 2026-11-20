@@ -9,8 +9,8 @@ export interface NotificationItem {
 }
 
 export async function fetchNotifications(): Promise<NotificationItem[]> {
-  const { data } = await apiClient.get("/notifications/");
-  return data;
+  const { data } = await apiClient.get("/notifications/", { params: { page_size: 100 } });
+  return Array.isArray(data) ? data : (data.results ?? []);
 }
 
 export async function fetchUnreadCount(): Promise<number> {
@@ -26,3 +26,4 @@ export async function markRead(id: number): Promise<NotificationItem> {
 export async function markAllRead(): Promise<void> {
   await apiClient.post("/notifications/mark_all_read/");
 }
+

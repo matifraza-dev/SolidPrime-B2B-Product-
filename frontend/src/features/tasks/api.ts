@@ -40,8 +40,8 @@ export interface TeamOption {
 }
 
 export async function fetchTasks(): Promise<Task[]> {
-  const { data } = await apiClient.get("/tasks/");
-  return data;
+  const { data } = await apiClient.get("/tasks/", { params: { page_size: 200 } });
+  return Array.isArray(data) ? data : (data.results ?? []);
 }
 
 export async function createTask(payload: TaskPayload): Promise<Task> {
@@ -70,3 +70,4 @@ export async function fetchTeamOptions(): Promise<TeamOption[]> {
   const { data } = await apiClient.get("/team/options/");
   return data;
 }
+

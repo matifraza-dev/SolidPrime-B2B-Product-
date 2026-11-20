@@ -1,8 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, Search, LogOut, User as UserIcon, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
+import { fetchUnreadCount } from "@/features/notifications/api";
 
 interface TopbarProps {
   onOpenSearch: () => void;
@@ -13,6 +15,12 @@ export function Topbar({ onOpenSearch }: TopbarProps) {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["unread-count"],
+    queryFn: fetchUnreadCount,
+    refetchInterval: 30_000,
+  });
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-canvas px-6">
@@ -30,10 +38,13 @@ export function Topbar({ onOpenSearch }: TopbarProps) {
       <div className="flex items-center gap-3">
         <button
           aria-label="Notifications"
+          onClick={() => navigate("/notifications")}
           className="relative flex h-9 w-9 items-center justify-center rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
         >
           <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-danger" />
+          {unreadCount > 0 && (
+            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-danger" />
+          )}
         </button>
 
         <div className="relative">

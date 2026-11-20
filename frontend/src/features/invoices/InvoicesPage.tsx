@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { fetchInvoices, fetchInvoice, deleteInvoice } from "./api";
 import type { Invoice, InvoiceStatus } from "./api";
 import { InvoiceFormModal } from "./InvoiceFormModal";
+import { extractErrorMessage } from "@/api/client";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -26,12 +27,17 @@ const statusTone: Record<InvoiceStatus, "success" | "info" | "danger" | "accent"
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
+function parseLocalDate(dateStr: string) {
+  return new Date(dateStr.includes("T") ? dateStr : `${dateStr}T00:00:00`);
+}
+
 export function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | undefined>(undefined);
+  const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search);
   const queryClient = useQueryClient();
 
@@ -49,6 +55,7 @@ export function InvoicesPage() {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
     },
+    onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
   function handleDelete(invoice: Invoice) {
@@ -63,10 +70,17 @@ export function InvoicesPage() {
   }
 
   async function openEdit(invoiceSummary: Invoice) {
-    // list rows don't include line_items - fetch the full detail before editing
-    const full = await fetchInvoice(invoiceSummary.public_id);
-    setEditingInvoice(full);
-    setShowFormModal(true);
+    if (loadingDetailId) return;
+    setLoadingDetailId(invoiceSummary.public_id);
+    try {
+      const full = await fetchInvoice(invoiceSummary.public_id);
+      setEditingInvoice(full);
+      setShowFormModal(true);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setLoadingDetailId(null);
+    }
   }
 
   return (
@@ -119,7 +133,7 @@ export function InvoicesPage() {
                         <Badge tone={statusTone[invoice.status]}>{invoice.status_display}</Badge>
                       </div>
                       <p className="mt-0.5 text-xs text-muted">
-                        {invoice.customer_name} · Due {format(new Date(invoice.due_date), "PP")}
+                        {invoice.customer_name} · Due {format(parseLocalDate(invoice.due_date), "PP")}
                       </p>
                     </div>
 
@@ -129,7 +143,8 @@ export function InvoicesPage() {
                       </span>
                       <button
                         onClick={() => openEdit(invoice)}
-                        className="rounded-md p-1.5 text-muted hover:bg-surface-hover hover:text-primary"
+                        disabled={loadingDetailId === invoice.public_id}
+                        className="rounded-md p-1.5 text-muted hover:bg-surface-hover hover:text-primary disabled:opacity-50"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>

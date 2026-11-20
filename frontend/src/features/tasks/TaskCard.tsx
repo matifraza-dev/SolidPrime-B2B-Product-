@@ -36,7 +36,7 @@ export function TaskCard({ task, onDragStart, onEdit, onDelete }: TaskCardProps)
           {task.priority_display}
         </span>
         {task.due_date && (
-          <span className="text-xs text-muted">{format(new Date(task.due_date), "MMM d")}</span>
+          <span className="text-xs text-muted">{format(new Date(task.due_date.includes("T") ? task.due_date : `${task.due_date}T00:00:00`), "MMM d")}</span>
         )}
       </div>
 
@@ -67,3 +67,4 @@ export function TaskCard({ task, onDragStart, onEdit, onDelete }: TaskCardProps)
     </div>
   );
 }
+

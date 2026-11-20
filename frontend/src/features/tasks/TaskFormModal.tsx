@@ -124,7 +124,7 @@ export function TaskFormModal({ task, defaultStatus, onClose }: TaskFormModalPro
             </div>
           </div>
 
-          {mutation.isError && <p className="text-xs text-red-400">Something went wrong. Try again.</p>}
+          {mutation.isError && <p className="text-xs text-red-400">{extractErrorMessage(mutation.error)}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
@@ -137,3 +137,4 @@ export function TaskFormModal({ task, defaultStatus, onClose }: TaskFormModalPro
     </div>
   );
 }
+

@@ -6,6 +6,7 @@ import { fetchTasks, updateTask, deleteTask } from "./api";
 import type { Task, TaskStatus } from "./api";
 import { TaskCard } from "./TaskCard";
 import { TaskFormModal } from "./TaskFormModal";
+import { extractErrorMessage } from "@/api/client";
 import { Button } from "@/components/ui/Button";
 import { PageSpinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -36,8 +37,9 @@ export function TasksPage() {
       );
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(["tasks"], context.previous);
+      toast.error(extractErrorMessage(err));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -52,6 +54,7 @@ export function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
     },
+    onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
   function handleDragStart(e: React.DragEvent, taskId: string) {
@@ -62,7 +65,10 @@ export function TasksPage() {
     e.preventDefault();
     const taskId = e.dataTransfer.getData("taskId");
     setDragOverStatus(null);
-    if (taskId) moveMutation.mutate({ id: taskId, status });
+    if (!taskId) return;
+    const current = tasks?.find((t) => t.public_id === taskId);
+    if (current?.status === status) return;
+    moveMutation.mutate({ id: taskId, status });
   }
 
   function handleDelete(task: Task) {
